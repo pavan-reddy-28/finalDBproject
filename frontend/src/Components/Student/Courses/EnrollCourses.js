@@ -210,7 +210,7 @@ const EnrollCourses = () => {
                     enrollData
                 })
 
-                // Submit the form or perform any desired actions on successful form submission
+               // Submit the form or perform any desired actions on successful form submission
                 dispatch(studentClassRegister({
                     studentId,
                     enrollData
@@ -309,7 +309,7 @@ const EnrollCourses = () => {
                                                                     timeArray[obj.value].map((classTime, index1) => {
 
                                                                         return (<FormControlLabel
-                                                                            value={`${classTime.value}`}
+                                                                            value={classTime.value}
                                                                             control={<Radio />}
                                                                             label={`${classTime.label} [ available slots : ${classTime.available}]`}
                                                                             name="time"

@@ -31,7 +31,7 @@ async function getProfessors() {
 
   
   async function getProfEnrollmentById({courseId}) {
-    
+
     const data = await dbGetProfEnrollmentById({courseId})
     .then( (data) => data  == null ? {"message":"error"} : data)
     .catch(data => "error");
@@ -39,10 +39,10 @@ async function getProfessors() {
     return data;
   }
 
-
 module.exports = {
     addProfessor,
     getProfessors,
     checkEmailExists,
-    getProfEnrollmentById
+    getProfEnrollmentById,
+
 }

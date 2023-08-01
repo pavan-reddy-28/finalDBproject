@@ -1,4 +1,5 @@
 
+// const { alterDataArray } = require('../controllers/util');
 const { DATABASE, ADMIN, STUDENT, COURSE, DEPARTMENT, SECTION, PROFESSOR, PROFESSOR_ENROLLMENT, STUDENT_ENROLLMENT } = require('./constants');
 
 
@@ -90,54 +91,82 @@ async function dbGetStudentClassDetails(studentData) {
     return "error"
   }
 }
+
+
+
+
+
 async function dbDropCourse(studentData) {
   const { studentId,courseId } = studentData
-
   try {
-    const getStudentResult = await studentEnrollmentCollection.findOne({ studentId: new ObjectId(studentId) });
+    const getStudentResult = await studentEnrollmentCollection.find({ studentId: new ObjectId(studentId) }).project({ enrolls: 1,enrollNumber:1, _id: 1 }).toArray();
 
-    let enrolls = getStudentResult['enrolls']
+     let studentEnrolls = getStudentResult[0]["enrolls"].filter(obj => obj.courseId == courseId);
 
-   getStudentResult['enrolls'].map((obj,index)=>{
-    if(obj["courseId"] == courseId){
-      enrolls.pop(index)
-    }
-    })
-
-    const dataResult = await studentEnrollmentCollection.updateOne(
-      { "_id": getStudentResult._id },
+    const professorDataResult = await professorEnrollmentCollection.findOne({courseId:new ObjectId(courseId)});
+    let enrollArrayProf = professorDataResult.enrolls
+    let newResultArray = enrollArrayProf.map((obj)=>{
+      if(obj["day"] === studentEnrolls[0]["day"] && obj["time"] === studentEnrolls[0]["time"]){
+          return{
+              "day":obj["day"], "time":obj["time"], "available": obj["available"] + 1,
+          }
+      }
+      return {...obj}
+  })
+    const updateProfessorData = await professorEnrollmentCollection.updateOne(
+      { "_id": professorDataResult._id },
       { "$set": 
       { 
-        enrollNumber: getStudentResult.enrollNumber - 1,
-        enrolls: [
-         ...enrolls
+        "enrolls": [
+          ...newResultArray
         ]
       } 
       }
     );
-
-    return { ...dataResult};
+    let newStudentArray =  getStudentResult[0]["enrolls"].filter((obj) => obj.courseId != courseId)
+    const dataResult = await studentEnrollmentCollection.updateOne(
+      { "_id": getStudentResult[0]["_id"] },
+      { "$set": 
+      { 
+        enrollNumber: getStudentResult[0]["enrollNumber"] - 1,
+        enrolls: [
+         ...newStudentArray
+        ]
+      } 
+      }
+    );
+    return {"message":"success"};
   } catch (error) {
     console.log("erro : ",error.message)
     return "error"
   }
 }
 
+
+
+
+
+
+
 async function dbRegisterStudentClass(studentData) {
   const { studentId, enrollData } = studentData
 
   try {
-    const studentQuery = { _id: new ObjectId(studentId) }
-    const studentResult = await studentCollection.findOne(studentQuery)
+    // const studentQuery = { _id: new ObjectId(studentId) }
 
-    const checkStudent = await studentEnrollmentCollection.findOne({ studentId: studentResult._id });
+    // const studentResult = await studentCollection.findOne(studentQuery)
+
+
+    const checkStudent = await studentEnrollmentCollection.findOne({ studentId: new ObjectId(studentId) });
 
     if (checkStudent === null) {
   
+
+
       const studentEnrollmentQuery = {
 
         enrollNumber:1,
-        studentId: studentResult._id,
+        studentId:  new ObjectId(studentId),
         enrolls: [
           {
             ...enrollData,
@@ -148,10 +177,14 @@ async function dbRegisterStudentClass(studentData) {
         ]
 
       }
+      //insertion into the student enrollment is done succesfully
       const dataResult = await studentEnrollmentCollection.insertOne(studentEnrollmentQuery);
 
 
-      return { ...dataResult, "msg": "success" };
+
+
+
+   
     }else{
      
       const dataResult = await studentEnrollmentCollection.updateOne(
@@ -172,39 +205,39 @@ async function dbRegisterStudentClass(studentData) {
         }
       );
 
-      const professorDataResult = await professorEnrollmentCollection.findOne({courseId:new ObjectId(enrollData["courseId"])});
-      let enrollArrayProf = professorDataResult.enrolls
-
-      for(let i =0 ; i < professorDataResult.enrolls.length;i++){
-        let checker =  professorDataResult.enrolls[i];
-       
-        if(checker["day"] == enrollData["day"] && checker["time"] == enrollData["time"]){
-          let Eday = enrollArrayProf[i]["day"]
-          let Etime = enrollArrayProf[i]["time"]
-          let Eavailable = enrollArrayProf[i]["available"] - 1
-          enrollArrayProf.pop(i);
-          
-          enrollArrayProf.push({
-             "day": Eday, "time": Etime, "available": Eavailable ,
-          })
-        
-          break;
-        }
       }
 
+      const professorDataResult = await professorEnrollmentCollection.findOne({courseId:new ObjectId(enrollData["courseId"])});
+
+
+
+      let enrollArrayProf = professorDataResult["enrolls"]
+
+      let newProfessorEnrollArray = enrollArrayProf.map((obj)=>{
+          if(obj["day"] == enrollData["day"] && obj["time"] == enrollData["time"]){
+            return{
+              ...obj, "available": obj["available"] - 1,
+            }
+          }
+          return {...obj}
+      }
+      )
+
+     
       const updateProfessorData = await professorEnrollmentCollection.updateOne(
         { "_id": professorDataResult._id },
         { "$set": 
         { 
          
           "enrolls": [
-            ...enrollArrayProf
+            ...newProfessorEnrollArray
           ]
         } 
         }
       );
+      
       return { ...updateProfessorData, "msg": "success" };
-    }
+    
 
   } catch (error) {
     console.log(" error : ",error.message)
