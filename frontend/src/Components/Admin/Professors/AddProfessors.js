@@ -5,12 +5,13 @@ import { ButtonContainer, Title } from '../styles/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { RadioButtonContainer, SubmitButton, RowContainer, FormContainer, Card, ModalContent } from '../styles/departmentStyles';
 import SuccessModal from '../SuccessModal';
-import { fetchCourses, fetchCrnByDepart,fetchCrnArrayById } from '../../../features/courses/courseSlice';
-import { professorCheckMail, professorRegister } from '../../../features/professor/professorSlice';
+import { fetchCourses, fetchCrnByDepart,fetchCrnArrayById, fetchCourseIdArray } from '../../../features/courses/courseSlice';
+import { fetchAllProfessorsMails, professorCheckMail, professorRegister } from '../../../features/professor/professorSlice';
 
 
 const AddProfessors = () => {
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+    const [courseError,setCourseError] = useState("")
     const dispatch = useDispatch();
     const [professorData, setProfessorData] = useState({
         firstName: '',
@@ -38,10 +39,19 @@ const AddProfessors = () => {
     const fetchCrnsByDepart = useSelector(
         (state) => state.courses.crns
     )
-    const fetchEmail = useSelector(
-        (state) => state.professor.professor
+    const fetchEmails = useSelector(
+        (state) => state.professor.AllProfessorMails
     )
-    console.log(" fetchEmail ",fetchEmail)
+    const fetchCoursesArray = useSelector(
+        (state) => state.courses.courseIdArray
+    )
+    useEffect(() => {
+        dispatch(fetchAllProfessorsMails())
+        dispatch(fetchCourseIdArray())
+       
+        console.log(" crns professorData.department ", fetchEmails)
+    }, [])
+
 
     useEffect(() => {
         dispatch(fetchCrnByDepart({ department: professorData.department }))
@@ -60,9 +70,20 @@ const AddProfessors = () => {
     const [formErrors, setFormErrors] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const handleInputChange = (e) => {
+        setCourseError("")
         setFormErrors({});
         const { name, value } = e.target;
-        if (name == "day") {
+        if(name == "department"){
+            setProfessorData({
+                ...professorData,
+                [name]: value,
+                subject: '',
+                crn: '',
+                day: { 'MON': '', 'TUE': '', 'WED': '', 'THU': '', 'FRI': '' },
+                crnValue: {}
+            })
+        }
+       else if (name == "day") {
             let x = { ...professorData.day }
 
             if (x[value] === "") {
@@ -128,9 +149,15 @@ const AddProfessors = () => {
             // Submit the form or perform any desired actions on successful form submission
 
 
-            dispatch(professorCheckMail({email:professorData.email}))
+            // dispatch(professorCheckMail({email:professorData.email}))
 
-            if(!fetchEmail){
+            if( !fetchEmails.includes(professorData.email) ){
+
+
+                if( fetchCoursesArray.includes(professorData.subject)){
+                    setCourseError("yes")
+                    setIsErrorModalOpen(true);
+                }else{
                 const professorCollectionData = {
                     firstName: professorData.firstName,
                     lastName: professorData.lastName,
@@ -159,7 +186,7 @@ const AddProfessors = () => {
                 console.log(" sections data ",sections)
                  dispatch(professorRegister({professorEnrollmentData,professorCollectionData,sections}))
                 setIsModalOpen(true);
-    
+            }
             }else{
                 setIsErrorModalOpen(true);
             }
@@ -237,7 +264,7 @@ const AddProfessors = () => {
                             </FormControl>
                         </RowContainer>
                         {
-                            professorData.subject && <FormControl variant="outlined" fullWidth error={formErrors.crn}>
+                            professorData.subject &&  fetchCrnsByDepart ? <FormControl variant="outlined" fullWidth error={formErrors.crn}>
                                 <InputLabel>CRN</InputLabel>
                                 <Select name="crn" value={professorData.crn} onChange={handleInputChange} label="CRN">
                                     {
@@ -248,7 +275,11 @@ const AddProfessors = () => {
 
                                     {/* Add more CRN options as needed */}
                                 </Select>
-                            </FormControl>
+                            </FormControl>:
+                            <>
+                            { professorData.subject!=="" && <span style={{ fontSize: '12px', color: 'red', borderBottom: '1px solid red' }}>No CRN allocated for this course </span>}
+                                
+                            </>
                         }
 
 
@@ -329,10 +360,17 @@ const AddProfessors = () => {
                 redirect={"/adminDashboard"}
             />
             <Modal open={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)}>
-       
+                                    <div>
             <ModalContent>
-        <span >Professor  : <b style={{color:'red'}}>{professorData.email} </b> already exits </span>
-        </ModalContent>
+             <span >Professor  : <b style={{color:'red'}}>{professorData.email} </b> already exits </span>
+             </ModalContent>
+             {
+                courseError =="yes"?<>
+                <ModalContent>
+             <span >Selected  : <b style={{color:'red'}}>{"Course"} </b> is registered to another Professor</span>
+             </ModalContent></>:<></>
+             }
+             </div>
      </Modal>
 
         </div>

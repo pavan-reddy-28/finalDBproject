@@ -1,4 +1,4 @@
-const {  dbGetDepartmentsAndCourses,dbGetAllDepartments,dbGetCrnByDepart,dbAddDepartments, dbGetCRN, dbAddCourse,dbGetCrnById } = require("../DAO/databaseConnection");
+const {  dbGetDepartmentsAndCourses,dbGetCourseIdArray,dbGetAllDepartments,dbGetCrnByDepart,dbAddDepartments, dbGetCRN, dbAddCourse,dbGetCrnById } = require("../DAO/databaseConnection");
 
 
 async function getDepartments() {
@@ -58,4 +58,15 @@ async function getAllDepartments() {
     .catch(data => "error");
     return data;
 }
-module.exports={getAllDepartments,getDepartments,addCourse,addDepartments,getCRN,getCrnByDepart,getCrnById}
+
+
+
+async function getCourseIdArray() {
+    const data = await dbGetCourseIdArray()
+    .then( (data) => data  == null ? {"error":"error"} : data)
+    .catch(data => "error");
+    return data;
+}
+
+
+module.exports={getCourseIdArray,getAllDepartments,getDepartments,addCourse,addDepartments,getCRN,getCrnByDepart,getCrnById}

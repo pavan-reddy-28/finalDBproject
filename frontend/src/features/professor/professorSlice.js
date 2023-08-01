@@ -6,6 +6,7 @@ import { createSlice,createAsyncThunk } from '@reduxjs/toolkit'
 const initialState = {
     loading:false,
     professor:"",
+    AllProfessorMails:[],
     professorCourse:{},
     allProfessors:{},
     submitData:"",
@@ -61,6 +62,22 @@ const fetchAllProfessors = createAsyncThunk(
             'http://localhost:8000/fetchProfessors',
             config)
         return response.data
+
+    }
+    
+)
+const fetchAllProfessorsMails = createAsyncThunk(
+    'professor/fetchAllMails',
+    async () => {
+        const config = {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+       const response = await axios.get(
+            'http://localhost:8000/fetchProfessorsArray',
+            config)
+        return response.data["professorMails"]
 
     }
     
@@ -148,10 +165,25 @@ const fetchProfessorCourseDetails = createAsyncThunk(
             state.professorCourse={}
             state.error=action.error.message
         })
+        builder.addCase(fetchAllProfessorsMails.pending, (state) => {
+            state.loading=true
+            state.AllProfessorMails=[]
+            state.error=''
+        })
+        builder.addCase(fetchAllProfessorsMails.fulfilled, (state,action)=>{
+            state.loading=false
+            state.AllProfessorMails=action.payload
+            state.error=''
+        })
+        builder.addCase(fetchAllProfessorsMails.rejected, (state,action)=>{
+            state.loading=false
+            state.AllProfessorMails=[]
+            state.error=action.error.message
+        })
     }
 })
 
 export default professorSlice.reducer
-export { professorRegister ,fetchAllProfessors,professorCheckMail,fetchProfessorCourseDetails}
+export { professorRegister ,fetchAllProfessors,professorCheckMail,fetchProfessorCourseDetails,fetchAllProfessorsMails}
 
 

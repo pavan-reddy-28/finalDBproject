@@ -9,6 +9,7 @@ const initialState = {
     crns:[],
     crnArray:[],
     allDepartments:[],
+    courseIdArray:[],
     addedDept:"",
     error:''
 }
@@ -74,6 +75,21 @@ const fetchCRN = createAsyncThunk(
             'http://localhost:8000/fetchCRN',
             config)
         return response.data.crns
+    }
+)
+
+const fetchCourseIdArray = createAsyncThunk(
+    'courses/fetchCourseIdArray',
+    async () => {
+        const config = {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+       const response = await axios.get(
+            'http://localhost:8000/fetchCourseIdArray',
+            config)
+        return response.data["courseIdArray"]
     }
 )
 
@@ -237,10 +253,25 @@ const fetchAllDepartments = createAsyncThunk(
             state.allDepartments=[]
             state.error=action.error.message
         })
+        builder.addCase(fetchCourseIdArray.pending, (state) => {
+            state.loading=true
+            state.courseIdArray=[]
+            state.error=''
+        })
+        builder.addCase(fetchCourseIdArray.fulfilled, (state,action)=>{
+            state.loading=false
+            state.courseIdArray=action.payload
+            state.error=''
+        })
+        builder.addCase(fetchCourseIdArray.rejected, (state,action)=>{
+            state.loading=false
+            state.courseIdArray=[]
+            state.error=action.error.message
+        })
     }
 })
 
 export default coursesSlice.reducer
-export {fetchCourses,addCourses,addDepartments,fetchCRN,fetchCrnByDepart,fetchCrnArrayById,fetchAllDepartments}
+export {fetchCourses,addCourses,fetchCourseIdArray,addDepartments,fetchCRN,fetchCrnByDepart,fetchCrnArrayById,fetchAllDepartments}
 
 

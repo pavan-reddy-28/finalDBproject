@@ -1,7 +1,7 @@
 
 
 
-const { dbAddProfessor,dbGetProfessors,dbCheckEmailExists,dbGetProfEnrollmentById } = require("../DAO/databaseConnection");
+const { dbAddProfessor,dbGetProfessors,dbGetProfessorsArray,dbCheckEmailExists,dbGetProfEnrollmentById } = require("../DAO/databaseConnection");
 
 
 async function addProfessor({ professorEnrollmentData, professorCollectionData, sections }) {
@@ -38,11 +38,19 @@ async function getProfessors() {
       console.log("data : ",data)
     return data;
   }
+  async function getProfessorsArray() {
 
+    const data = await dbGetProfessorsArray()
+    .then( (data) => data  == null ? {"message":"error"} : data)
+    .catch(data => "error");
+      console.log("data : ",data)
+    return data;
+  }
 module.exports = {
     addProfessor,
     getProfessors,
     checkEmailExists,
     getProfEnrollmentById,
+    getProfessorsArray
 
 }

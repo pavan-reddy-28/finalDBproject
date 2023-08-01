@@ -4,8 +4,8 @@ const multer  = require('multer');
 const bodyParser = require('body-parser');
 const { signInAdmin,getAdminDetailsById } = require('./controllers/admin');
 const { signInStudent,dropCourse, registerStudent,getStudentDetailsById,registerStudentClass, getStudentClassDetails } = require('./controllers/student');
-const { addDepartments, getAllDepartments,getDepartments,addCourse,getCRN,getCrnByDepart, getCrnById } = require('./controllers/course');
-const { addProfessor,getProfessors,checkEmailExists , getProfEnrollmentById} = require('./controllers/professor');
+const { addDepartments, getAllDepartments,getCourseIdArray,getDepartments,addCourse,getCRN,getCrnByDepart, getCrnById } = require('./controllers/course');
+const { addProfessor,getProfessors,getProfessorsArray,checkEmailExists , getProfEnrollmentById} = require('./controllers/professor');
 
 
 const app = express();
@@ -141,7 +141,15 @@ app.get("/fetchProfessors",upload.any(), async (req,res) => {
     const data = await getProfessors();
     res.json({...data});
 })
+app.get("/fetchProfessorsArray",upload.any(), async (req,res) => {
+    const data = await getProfessorsArray();
+    res.json({...data});
+})
 
+app.get("/fetchCourseIdArray",upload.any(), async (req,res) => {
+    const data = await getCourseIdArray();
+    res.json({...data});
+})
 
 
 app.listen(8000, () => {

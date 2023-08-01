@@ -485,6 +485,7 @@ async function dbGetProfessors() {
 }
 
 
+
 async function dbGetProfEnrollmentById({ courseId }) {
   try {
     console.log(" courseid ", courseId)
@@ -519,6 +520,35 @@ async function dbGetAllDepartments() {
     return "error"
   }
 }
+
+
+async function dbGetProfessorsArray() {
+
+  try {
+    const fetchArray = await professorCollection.find({}).project({ mail: 1, _id: 0 }).toArray();
+    let arrayD = []
+    arrayD = fetchArray.map(o => o["mail"])
+    console.log("prof array ",arrayD)
+    return {"professorMails":arrayD};
+  } catch (error) {
+    return "error"
+  }
+}
+
+
+async function dbGetCourseIdArray() {
+
+  try {
+    const fetchArray = await professorEnrollmentCollection.find({}).project({ courseId: 1, _id: 0 }).toArray();
+     let arrayD = []
+     arrayD = fetchArray.map(obj => obj["courseId"])
+    console.log("course  array ",arrayD)
+    return {"courseIdArray":arrayD};
+  } catch (error) {
+    return "error"
+  }
+}
+
 module.exports = {
   dbAdminLogin,
   dbStudentLogin,
@@ -538,6 +568,8 @@ module.exports = {
   dbRegisterStudentClass,
   dbGetStudentClassDetails,
   dbDropCourse,
-  dbGetAllDepartments
+  dbGetAllDepartments,
+  dbGetProfessorsArray,
+  dbGetCourseIdArray
 }
 

@@ -57,13 +57,20 @@ const DepartmentsPage = () => {
     } else {
       // Submit the form or perform any desired actions on successful form submission
       // check weather the department exits already in db
-      if(Object.keys(fetchDepartmentsData).includes(departmentData.departmentName)){
+      let xName = Object.keys(fetchDepartmentsData)
+      if(fetchDepartmentsData != {}){
+        xName = xName.map(obj=>obj.toLowerCase())
+     
+      }
+      
+      
+      if(  xName.includes(departmentData.departmentName.toLowerCase())){
         setIsErrorModalOpen(true);
       }else{
         let arr = departmentData.crn.split(";");
         let checker=false;
         
-        arr.forEach(element => {
+        fetchCRNS &&  arr.forEach(element => {
             if(fetchCRNS.includes(element)){
                 checker=true;
                 setDupCRN(element)
