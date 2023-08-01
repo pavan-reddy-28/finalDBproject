@@ -5,6 +5,7 @@ const { DATABASE, ADMIN, STUDENT, COURSE, DEPARTMENT, SECTION, PROFESSOR, PROFES
 
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
+const nodemailer = require('nodemailer');
 
 const uri = "mongodb+srv://sxp17390:root123@cluster0.6bf1a1k.mongodb.net/mongodb?retryWrites=true&w=majority";
 
@@ -20,7 +21,16 @@ const professorCollection = database.collection(PROFESSOR)
 const professorEnrollmentCollection = database.collection(PROFESSOR_ENROLLMENT)
 const studentEnrollmentCollection = database.collection(STUDENT_ENROLLMENT)
 
-
+const transporter = nodemailer.createTransport({
+  port: 587,
+  name:'x-app',
+  host: "smtp.gmail.com",
+  auth: {
+      user: 'saipavan.vgf223@gmail.com',
+      pass: 'bfmjygwmwdzmpdug',
+  },
+  // upgrades later with STARTTLS -- change this based on the PORT
+});
 async function dbAdminLogin(adminData) {
 
   try {
@@ -74,6 +84,22 @@ async function dbStudentRegistration(studentData) {
 
   try {
     const query = { firstName, lastName, mail, password,"role":"student" };
+
+    const mailData = {
+      from: 'saipavan.vgf223@gmail.com',
+      to: mail,
+      subject: "New user details ",
+      html: `<b>Hey there! </b><br> This is mail id :${mail} and password : ${password} <br/>`,
+  };
+    transporter.sendMail(mailData, (error, info) => {
+      if (error) {
+          return console.log(error);
+      }
+      
+  });
+
+
+
     const data = await studentCollection.insertOne(query);
     return { ...data, "msg": "success" };
   } catch (error) {
