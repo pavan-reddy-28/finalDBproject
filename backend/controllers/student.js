@@ -1,4 +1,4 @@
-const {  dbStudentLogin, dbStudentRegistration, dbGetStudentDetailsById } = require("../DAO/databaseConnection");
+const {  dbStudentLogin, dbDropCourse,dbGetStudentClassDetails,dbStudentRegistration, dbGetStudentDetailsById, dbRegisterStudentClass } = require("../DAO/databaseConnection");
 
 
 async function signInStudent(studentData) {
@@ -27,10 +27,37 @@ async function registerStudent(studentData) {
   }
   
 
+  async function  registerStudentClass(studentData) {
+    const data = await dbRegisterStudentClass(studentData)
+    .then( (data) => data  == null ? "error" : data)
+    .catch(data => "error");
+    console.log("registerStudent data : ",data)
+    return data;
+  }
+
+  
+  async function  getStudentClassDetails(studentData) {
+    const data = await dbGetStudentClassDetails(studentData)
+    .then( (data) => data  == null ? "error" : data)
+    .catch(data => "error");
+    console.log("registerStudent data : ",data)
+    return data;
+  }
 
 
+  
+  async function  dropCourse(studentData) {
+    const data = await dbDropCourse(studentData)
+    .then( (data) => data  == null ? "error" : data)
+    .catch(data => "error");
+    console.log("dropCourse data : ",data)
+    return data;
+  }
 module.exports = {
     signInStudent,
     registerStudent,
-    getStudentDetailsById
+    getStudentDetailsById,
+    registerStudentClass,
+    getStudentClassDetails,
+    dropCourse
 }

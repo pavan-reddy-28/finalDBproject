@@ -11,13 +11,9 @@ import {
 import { Cookies } from 'react-cookie';
 import { styled } from '@mui/system';
 import { useNavigate, NavLink } from 'react-router-dom';
-
-
 import { useDispatch, useSelector } from 'react-redux'
 
 import { studentFetch, studentLogin,adminLogin, adminFetch } from '../../features/users/userSlice';
-
-
 
 const LoginForm = styled('form')(({ theme }) => ({
     display: 'flex',
@@ -86,9 +82,6 @@ const Login = () => {
         }
        }
     }, [])
-
-
-
     const handleSignIn = async (e) => {
         e.preventDefault();
 
@@ -97,7 +90,6 @@ const Login = () => {
             setAlertOpen(true);
             return;
         }
-
         try {
 
             let isValidCredentials = false
@@ -108,10 +100,7 @@ const Login = () => {
                 
                 dispatch(studentLogin({ email, password }))
 
-
             }
-
-
             if (!isValidCredentials) {
                 setError(true);
                 setAlertOpen(true);
@@ -161,11 +150,11 @@ const Login = () => {
                     required
                 />
                 <div>
-                    {/* <NavLink
-                        to="/"
+                    <NavLink
+                        to="/studentRegistration"
                     >
-                        Register New Customer
-                    </NavLink> */}
+                       Signup as Student
+                    </NavLink>
 
                 </div>
                 <SignInButton variant="contained" color="primary" type="submit">

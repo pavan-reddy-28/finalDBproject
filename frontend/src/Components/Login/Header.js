@@ -16,50 +16,45 @@ const Title = styled(Typography)(({ theme }) => ({
 
 
 const Header = () => {
-    // const navigate = useNavigate();
-    // const cookies = new Cookies();
-
+    const navigate = useNavigate();
+    const cookies = new Cookies();
+  const role = cookies.get("role")
 //   const handleCartClick = () => {
 //     navigate('/cart');
 //   };
-//  const handleLogout = async () =>{
-//     const removeData = Object.keys(cookies.getAll())
-//     for(let i =0;i<removeData.length;i++){
-//        await cookies.remove(removeData[i]);
-//     }
+ const handleLogout = async () =>{
+    await cookies.remove("id");
+   await cookies.remove("role");
+    navigate("/login")
 
-//     setUser("");
-//     navigate('/');
-//  }
+ }
 
 
-//  const handleHome = () =>{
-//     navigate("/");
-//  }
+ const handleHome = () =>{
+   
+    navigate(cookies.get("role") == "student"?"/studentDashboard":"adminDashboard");
+ }
   return (
     <AppBarStyled position="static">
       <Toolbar>
         <Title variant="h6">
           Student Enrollment System
         </Title>
-        {/* {
-          user!=""?
-          <>
-        <IconButton color="inherit" onClick={()=>handleHome()}>
+        
+         {
+          role == "student" || role == "admin" ?
+          <IconButton color="inherit" onClick={()=>handleHome()}>
           <Home />
         </IconButton>
-        
-        <IconButton color="inherit" onClick={()=>handleLogout()}>
+        :<></>
+        }
+        {
+          role == "student" || role == "admin" ?
+          <IconButton color="inherit"  onClick={()=>handleLogout()} >
           <ExitToApp />
         </IconButton>
-        </>
         :<></>
-
-        } */}
-        
-        <IconButton color="inherit" >
-          <ShoppingCart />
-        </IconButton>
+        }
         
       </Toolbar>
     </AppBarStyled>

@@ -5,60 +5,60 @@ import { createSlice,createAsyncThunk } from '@reduxjs/toolkit'
 
 const initialState = {
     loading:false,
-    user:{},
+    courseDetails:{},
+    submitData:"",
     error:''
 }
 // fulfilled, pending ,rejected
-const studentLogin = createAsyncThunk(
-    'student/login',
-    async ({ email, password } ) => {
+const studentClassRegister = createAsyncThunk(
+    'student/register',
+    async ({ studentId,enrollData } ) => {
         const config = {
             headers: {
               'Content-Type': 'application/json',
             },
           }
        const response = await axios.post(
-            'http://localhost:8000/studentLogin',
-            { email, password },
+            'http://localhost:8000/registerStudentClass',
+            { studentId,enrollData },
             config)
-        return response.data.data
+        return response.data.success
 
     }
     
 )
 
-const studentFetch = createAsyncThunk(
-    'student/fetch',
-    async ({ id} ) => {
+const studentDropClass = createAsyncThunk(
+    'student/dropCourse',
+    async ({ courseId,studentId} ) => {
         const config = {
             headers: {
               'Content-Type': 'application/json',
             },
           }
        const response = await axios.post(
-            'http://localhost:8000/getStudentDetailsById',
-            { id },
+            'http://localhost:8000/dropCourse',
+            { courseId,studentId},
             config)
-        return response.data.data
+        return response.data.message
 
     }
     
 )
 
-
-const adminLogin = createAsyncThunk(
-    'admin/login',
-    async ({ email, password } ) => {
+const studentSignup = createAsyncThunk(
+    'student/signup',
+    async ({ firstName, lastName, mail, password } ) => {
         const config = {
             headers: {
               'Content-Type': 'application/json',
             },
           }
        const response = await axios.post(
-            'http://localhost:8000/adminLogin',
-            { email, password },
+            'http://localhost:8000/studentSignup',
+            { firstName, lastName, mail, password },
             config)
-        return response.data.data
+        return response.data.message
 
     }
     
@@ -66,59 +66,97 @@ const adminLogin = createAsyncThunk(
 
 
 
-const userSlice = createSlice({
+
+const studentClassDetails = createAsyncThunk(
+    'student/classDetails',
+    async ({ studentId } ) => {
+        const config = {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+       const response = await axios.post(
+            'http://localhost:8000/getStudentClassDetails',
+            { studentId},
+            config)
+        return response.data
+
+    }
+    
+)
+
+
+ const studentSlice = createSlice({
     name:'student',
     initialState,
     extraReducers: (builder) =>{
-        builder.addCase(studentLogin.pending, (state) => {
+        builder.addCase(studentClassRegister.pending, (state) => {
             state.loading=true
-            state.user={}
+            state.submitData=""
             state.error=''
         })
-        builder.addCase(studentLogin.fulfilled, (state,action)=>{
+        builder.addCase(studentClassRegister.fulfilled, (state,action)=>{
             state.loading=false
-            state.user=action.payload
+            state.submitData=action.payload
             state.error=''
         })
-        builder.addCase(studentLogin.rejected, (state,action)=>{
+        builder.addCase(studentClassRegister.rejected, (state,action)=>{
             state.loading=false
-            state.user={}
+            state.submitData=""
             state.error=action.error.message
         })
-        builder.addCase(studentFetch.pending, (state) => {
+        builder.addCase(studentClassDetails.pending, (state) => {
             state.loading=true
-            state.user={}
+            state.courseDetails={}
             state.error=''
         })
-        builder.addCase(studentFetch.fulfilled, (state,action)=>{
+        builder.addCase(studentClassDetails.fulfilled, (state,action)=>{
             state.loading=false
-            state.user=action.payload
+            state.courseDetails=action.payload
             state.error=''
         })
-        builder.addCase(studentFetch.rejected, (state,action)=>{
+        builder.addCase(studentClassDetails.rejected, (state,action)=>{
             state.loading=false
-            state.user={}
+            state.courseDetails={}
             state.error=action.error.message
         })
-        builder.addCase(adminLogin.pending, (state) => {
+        builder.addCase(studentDropClass.pending, (state) => {
             state.loading=true
-            state.user={}
+            state.submitData=""
             state.error=''
         })
-        builder.addCase(adminLogin.fulfilled, (state,action)=>{
+        builder.addCase(studentDropClass.fulfilled, (state,action)=>{
             state.loading=false
-            state.user=action.payload
+            state.submitData=action.payload
             state.error=''
         })
-        builder.addCase(adminLogin.rejected, (state,action)=>{
+        builder.addCase(studentDropClass.rejected, (state,action)=>{
             state.loading=false
-            state.user={}
+            state.submitData=""
             state.error=action.error.message
         })
+        builder.addCase(studentSignup.pending, (state) => {
+            state.loading=true
+            state.submitData=""
+            state.error=''
+        })
+        builder.addCase(studentSignup.fulfilled, (state,action)=>{
+            state.loading=false
+            state.submitData=action.payload
+            state.error=''
+        })
+        builder.addCase(studentSignup.rejected, (state,action)=>{
+            state.loading=false
+            state.submitData=""
+            state.error=action.error.message
+        })
+        
     }
 })
 
-export default userSlice.reducer
-export {studentLogin,studentFetch,adminLogin}
+
+
+export default studentSlice.reducer
+export { studentClassRegister,studentSignup,studentClassDetails,studentDropClass}
 
 

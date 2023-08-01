@@ -5,6 +5,8 @@ const PROFESSOR = 'professor'
 const STUDENT = 'student'
 const PROFESSOR_ENROLLMENT = 'professorEnrollment'
 const STUDENT_ENROLLMENT = 'studentEnrollment'
+const DEPARTMENT = 'departments'
+const SECTION = 'sections'
 
 module.exports={
     DATABASE,
@@ -13,5 +15,7 @@ module.exports={
     STUDENT,
     PROFESSOR,
     STUDENT_ENROLLMENT,
-    PROFESSOR_ENROLLMENT
+    PROFESSOR_ENROLLMENT,
+    DEPARTMENT,
+    SECTION
 }
