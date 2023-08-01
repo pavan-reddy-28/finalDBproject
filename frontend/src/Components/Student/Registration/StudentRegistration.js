@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TextField, Button, Grid } from '@mui/material';
 import { styled } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
 import { ButtonContainer, Title } from '../styles/styles';
 import { Card ,SubmitButton} from '../styles/componentStyles';
-import { useDispatch } from 'react-redux';
-import { studentSignup } from '../../../features/student/studentSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchStudentMailArray, studentSignup } from '../../../features/student/studentSlice';
 
 const Container = styled('div')({
     display: 'flex',
@@ -18,14 +18,20 @@ const Container = styled('div')({
 
 const StudentRegistration = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState({});
-    const dispatch = useDispatch();
-
+    const fetchMailArray = useSelector(
+        (state) => state.student.studentMailArray
+    )
+    useEffect(() => {
+      dispatch(fetchStudentMailArray())
+    }, [])
+    
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -64,9 +70,15 @@ const StudentRegistration = () => {
             }
             return;
         }else{
+
+            if(fetchMailArray.includes(email)){
+                alert("Student already exists ")
+            }else{
+
             dispatch(studentSignup({"firstName":firstName, "lastName":lastName, "mail":email, "password":password}))
           alert("Student Registered Succesfully")
             navigate("/login")
+            }
         }
         
       

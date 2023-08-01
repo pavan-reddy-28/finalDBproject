@@ -574,6 +574,18 @@ async function dbGetCourseIdArray() {
     return "error"
   }
 }
+async function dbGetAllStudentMails() {
+
+  try {
+    const fetchArray = await studentCollection.find({}).project({ mail: 1, _id: 0 }).toArray();
+     let arrayD = []
+     arrayD = fetchArray.map(obj => obj["mail"])
+    console.log("student mail array",arrayD)
+    return {"studentMailArray":arrayD};
+  } catch (error) {
+    return "error"
+  }
+}
 
 module.exports = {
   dbAdminLogin,
@@ -596,6 +608,7 @@ module.exports = {
   dbDropCourse,
   dbGetAllDepartments,
   dbGetProfessorsArray,
-  dbGetCourseIdArray
+  dbGetCourseIdArray,
+  dbGetAllStudentMails
 }
 

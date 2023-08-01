@@ -6,6 +6,7 @@ import { createSlice,createAsyncThunk } from '@reduxjs/toolkit'
 const initialState = {
     loading:false,
     courseDetails:{},
+    studentMailArray:[],
     submitData:"",
     error:''
 }
@@ -23,6 +24,24 @@ const studentClassRegister = createAsyncThunk(
             { studentId,enrollData },
             config)
         return response.data.success
+
+    }
+    
+)
+
+const fetchStudentMailArray = createAsyncThunk(
+    'student/getStudentMailArray',
+    async () => {
+        const config = {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+       const response = await axios.get(
+            'http://localhost:8000/getAllStudentMail',
+            
+            config)
+        return response.data["studentMailArray"]
 
     }
     
@@ -150,6 +169,21 @@ const studentClassDetails = createAsyncThunk(
             state.submitData=""
             state.error=action.error.message
         })
+        builder.addCase(fetchStudentMailArray.pending, (state) => {
+            state.loading=true
+            state.studentMailArray=[]
+            state.error=''
+        })
+        builder.addCase(fetchStudentMailArray.fulfilled, (state,action)=>{
+            state.loading=false
+            state.studentMailArray=action.payload
+            state.error=''
+        })
+        builder.addCase(fetchStudentMailArray.rejected, (state,action)=>{
+            state.loading=false
+            state.studentMailArray=[]
+            state.error=action.error.message
+        })
         
     }
 })
@@ -157,6 +191,6 @@ const studentClassDetails = createAsyncThunk(
 
 
 export default studentSlice.reducer
-export { studentClassRegister,studentSignup,studentClassDetails,studentDropClass}
+export { studentClassRegister,studentSignup,studentClassDetails,studentDropClass,fetchStudentMailArray}
 
 

@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer  = require('multer');
 const bodyParser = require('body-parser');
 const { signInAdmin,getAdminDetailsById } = require('./controllers/admin');
-const { signInStudent,dropCourse, registerStudent,getStudentDetailsById,registerStudentClass, getStudentClassDetails } = require('./controllers/student');
+const { signInStudent,dropCourse, registerStudent,getStudentDetailsById,registerStudentClass, getStudentClassDetails, getAllStudentMails } = require('./controllers/student');
 const { addDepartments, getAllDepartments,getCourseIdArray,getDepartments,addCourse,getCRN,getCrnByDepart, getCrnById } = require('./controllers/course');
 const { addProfessor,getProfessors,getProfessorsArray,checkEmailExists , getProfEnrollmentById} = require('./controllers/professor');
 
@@ -35,6 +35,13 @@ app.post('/studentLogin',upload.any(), async (req, res) => {
     
 });
 
+app.get('/getAllStudentMail',upload.any(), async (req, res) => {
+   
+    // console.log("body data ",{email,password})
+    const data = await getAllStudentMails();
+     res.json({ ...data});
+    
+});
 app.get('/getStudentDetailsById',upload.any(), async (req, res) => {
     const { id } = req.body;
     const data = await getStudentDetailsById({ id})
