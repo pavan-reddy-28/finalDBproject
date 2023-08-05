@@ -5,20 +5,25 @@ import  {ModalContent,SubmitButton,FormContainer,Card} from '../styles/departmen
 import { useDispatch, useSelector } from 'react-redux';
 import SuccessModal from '../SuccessModal';
 import { addDepartments } from '../../../features/courses/courseSlice';
+import { fetchNewClassRooms, fetchNewDepartments, insertNewDepartments } from '../../../features/newCourse/newCourseSlice';
 
 const DepartmentsPage = () => {
     const dispatch = useDispatch();
+
     const fetchDepartmentsData = useSelector(
-        (state) =>   state.courses.courses
+        (state) =>   state.newCourses["departments"]
     )
-    const fetchCRNS = useSelector(
-        (state) =>   state.courses.crns
+    const fetchClassrooms = useSelector(
+        (state) =>   state.newCourses["classRooms"]
     )
     useEffect(() => {
-     console.log(" crn values ",fetchCRNS)
+        dispatch(fetchNewClassRooms())
+        dispatch(fetchNewDepartments())
+   
     }, [])
     
-    const [dupCRN,setDupCRN] = useState("");
+
+  const [dupCRN,setDupCRN] = useState("");
   const [departmentData, setDepartmentData] = useState({
     departmentName: '',
     crn:''
@@ -35,8 +40,7 @@ const DepartmentsPage = () => {
         value=value.toUpperCase();
         let arr = value.split(";")
         value = arr.filter((item,
-            index) => arr.indexOf(item) === index).join(";");
-            
+            index) => arr.indexOf(item) === index).join(";");     
     }
     setDepartmentData({ ...departmentData, [name]: value });
   };
@@ -50,18 +54,18 @@ const DepartmentsPage = () => {
     }
     if (!departmentData.crn.trim()) {
         errors.crn = true;
-      }
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
     } else {
-      // Submit the form or perform any desired actions on successful form submission
-      // check weather the department exits already in db
-      let xName = Object.keys(fetchDepartmentsData)
-      if(fetchDepartmentsData != {}){
-        xName = xName.map(obj=>obj.toLowerCase())
-     
-      }
+      
+      let xName = fetchDepartmentsData.map(obj=>obj.toLowerCase())
+
+      let classRoomArray=[]
+      fetchClassrooms &&  fetchClassrooms.map(obj=>{
+            classRoomArray.push( Object.keys(obj)[0])
+        })
       
       
       if(  xName.includes(departmentData.departmentName.toLowerCase())){
@@ -70,8 +74,8 @@ const DepartmentsPage = () => {
         let arr = departmentData.crn.split(";");
         let checker=false;
         
-        fetchCRNS &&  arr.forEach(element => {
-            if(fetchCRNS.includes(element)){
+        fetchClassrooms &&  arr.forEach(element => {
+            if(classRoomArray.includes(element)){
                 checker=true;
                 setDupCRN(element)
             }
@@ -80,9 +84,9 @@ const DepartmentsPage = () => {
         if(checker){
         setIsErrorModalOpen(true)
         }else{
-            dispatch(addDepartments({
+            dispatch(insertNewDepartments({
                 department:departmentData.departmentName,
-                crn:departmentData.crn,
+                classRooms:departmentData.crn,
                 }))
             setIsModalOpen(true);
         }
@@ -108,16 +112,16 @@ const DepartmentsPage = () => {
             error={formErrors.departmentName}
             helperText={formErrors.departmentName && 'Department Name is required'}
           />
-          <span>Please enter the crn numbers seperated with <b>" ; "</b> </span>
+          <span>Please enter the Class room numbers seperated with <b>" ; "</b> </span>
           <TextField
-            label="CRN"
+            label="ClassRooms"
             variant="outlined"
             fullWidth
             name="crn"
             value={departmentData.crn}
             onChange={handleInputChange}
             error={formErrors.subjectName}
-            helperText={formErrors.subjectName && 'crn is required '}
+            helperText={formErrors.subjectName && 'classRooms are required '}
           />
           
           <ButtonContainer>
@@ -129,6 +133,18 @@ const DepartmentsPage = () => {
       </form>
       </Card>
 
+      <Title>
+          Departments List 
+        </Title>
+        <Card style={{width:'400px'}}>      
+      <div style={{}}>
+        <ol>
+        {
+            fetchDepartmentsData && fetchDepartmentsData.map((obj,index)=><li><div>{obj}</div></li>)
+        }
+    </ol>
+    </div>
+      </Card>
       <SuccessModal
       isModalOpen={isModalOpen}
       setIsModalOpen={setIsModalOpen}
@@ -139,7 +155,7 @@ const DepartmentsPage = () => {
        
         {
           dupCRN!==""?  <ModalContent>
-            <span >CRN : <b style={{color:'red'}}>{dupCRN} </b> already exits </span>
+            <span >Class Room  : <b style={{color:'red'}}>{dupCRN} </b> already exits </span>
         </ModalContent>:
         <ModalContent>
         <span >Department : <b style={{color:'red'}}>{departmentData.departmentName} </b> already exits </span>

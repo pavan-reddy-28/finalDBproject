@@ -8,6 +8,8 @@ import { fetchCourses } from '../../../features/courses/courseSlice';
 import { studentClassDetails, studentDropClass } from '../../../features/student/studentSlice';
 import { SubmitButton } from '../styles/componentStyles';
 import { useNavigate } from 'react-router-dom';
+import { getStudentClassData, studentDropCourseNew } from '../../../features/newStudent/newStudentSlice';
+// import { dropCourse } from '../../../../../backend/controllers/student';
 
 const UpdateEnrollment = () => {
     const dispatch = useDispatch();
@@ -20,6 +22,18 @@ const UpdateEnrollment = () => {
     const fetchCoursesData = useSelector(
         (state) => state.courses.courses
     )
+    const fetchStudentCourses = useSelector(
+        (state) => state.newStudent["studentCourses"]
+    )
+
+    useEffect(() => {
+        const studentId = cookies.get("id")
+        dispatch(getStudentClassData({ studentId }))
+
+    }, [])
+
+    console.log(" new data   data :   ", fetchStudentCourses)
+
 
     useEffect(() => {
         dispatch(fetchCourses())
@@ -31,6 +45,10 @@ const UpdateEnrollment = () => {
         dispatch(studentClassDetails({ studentId: studentId }))
         // console.log(" crn values studentCourseRegistrationDetails ", studentCourseRegistrationDetails)
     }, [])
+    const [arrayCourse, setarrayCourse] = useState([])
+    useEffect(() => {
+        setarrayCourse(fetchStudentCourses["enrolls"])
+    }, [fetchStudentCourses])
 
     const convertTime = (value) => {
         switch (value) {
@@ -42,74 +60,75 @@ const UpdateEnrollment = () => {
                 return "03:20 PM - 06:10 PM";
         }
     }
-    const handleDropCourse = (courseId) => {
+    const handleDropCourse = (professorId) => {
         const studentId = cookies.get("id")
-        dispatch(studentDropClass({ courseId: courseId, studentId: studentId }))
+        dispatch(studentDropCourseNew({ "professorId": professorId, studentId: studentId }))
         navigate("/studentDashboard")
     }
-    const handleUpdateCourse = (courseListData) =>{
+    const handleUpdateCourse = (courseListData) => {
         navigate(
             '/editEnrolledCourse',
             {
-              state: {
-                enrollNumber:studentCourseRegistrationDetails["enrollNumber"],
-                enrollmentId:studentCourseRegistrationDetails["_id"],
-                ...courseListData,
-            }} );
+                state: {
+                    enrollNumber: studentCourseRegistrationDetails["enrollNumber"],
+                    enrollmentId: studentCourseRegistrationDetails["_id"],
+                    ...courseListData,
+                }
+            });
     }
     return (
         <div>
             <Title>
                 Courses List
             </Title>
+            <ButtonContainer>
+                <SubmitButton onClick={() => { navigate("/studentDashboard") }} type="submit" variant="contained" color="primary">
+                    Back
+                </SubmitButton>
+
+
+            </ButtonContainer>
+
             <div>
                 {
-                    studentCourseRegistrationDetails && studentCourseRegistrationDetails.enrollNumber > 0 ?
-                        Object.keys(fetchCoursesData).map((dept, index) => (
-
-                            <>
-                                <CourseContainer style={{ textAlign: 'left', marginLeft: '20px', width: '30%' }}>
-                                    <span style={{ fontWeight: '600', fontSize: '26px' }}>
-                                        {dept}
-                                    </span>
-                                </CourseContainer>
-                                {
-                                    fetchCoursesData[dept]["courses"].map((coursesData) => (
-                                        studentCourseRegistrationDetails && studentCourseRegistrationDetails["enrolls"].map(
-                                            (studentObj) => {
-                                                if (studentObj["courseId"] == coursesData._id) {
-                                                    return (<CourseSubContainer>
-                                                        <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{coursesData.title}</span></div>
-                                                        <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"Day : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{studentObj["day"]}</span></div>
-                                                        <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"CRN : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{studentObj["crn"]}</span></div>
-                                                        <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"Timing  : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{convertTime(studentObj["time"])}</span></div>
-                                                        <div>
-                                                            <ButtonContainer>
-                                                                <SubmitButton onClick={() => handleUpdateCourse({...studentObj,dept:dept})} type="submit" variant="contained" color="primary">
-                                                                    Update Course
-                                                                </SubmitButton>
-
-                                                                <SubmitButton onClick={() => handleDropCourse(studentObj["courseId"])} style={{ marginLeft: '20px' }} type="submit" variant="contained" color="primary">
-                                                                    Drop Course
-                                                                </SubmitButton>
-                                                            </ButtonContainer>
-
-                                                        </div>
-
-                                                    </CourseSubContainer>)
-                                                } else {
-                                                    return <></>
-                                                }
-                                            }
-                                        )
-
-                                    ))
-                                }
-
-                            </>
+                    fetchStudentCourses && fetchStudentCourses.enrolls && fetchStudentCourses.enrolls.length > 0 ?
 
 
-                        ))
+                        <>
+
+                            {
+
+                                arrayCourse && arrayCourse.map(
+                                    (studentObj) => {
+
+                                        return (<CourseSubContainer>
+                                            <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{`${studentObj.courseName}  [${studentObj.cid}]`}</span></div>
+                                            <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"CRN  : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{studentObj["crn"]}</span></div>
+                                            <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"Day : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{studentObj["day"]}</span></div>
+                                            <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"Class Room : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{studentObj["roomNumber"]}</span></div>
+                                            <div><span style={{ color: '#0080ff', fontWeight: '600', fontSize: '20px' }}>{"Timing  : "}</span><span style={{ color: 'black', fontWeight: '600', }}>{convertTime(studentObj["time"])}</span></div>
+                                            <div>
+
+                                            </div>
+                                            <ButtonContainer>
+                                                <SubmitButton onClick={() => handleDropCourse(studentObj["professorId"])} type="submit" variant="contained" color="primary">
+                                                    Drop Course
+                                                </SubmitButton>
+
+
+                                            </ButtonContainer>
+                                        </CourseSubContainer>)
+
+                                    }
+                                )
+
+
+                            }
+
+                        </>
+
+
+
                         : <div style={{ margin: 'auto', textAlign: "center" }}><h1> No Courses enrolled</h1></div>
                 }
 

@@ -8,7 +8,15 @@ const STUDENT_ENROLLMENT = 'studentEnrollment'
 const DEPARTMENT = 'departments'
 const SECTION = 'sections'
 
+const NEW_DEPARTMENTS = 'newDepartments'
+const NEW_COURSES = "newCourses"
+const NEW_PROFESSORS = "newProfessors"
+const NEW_STUDENTS = "newStudents"
 module.exports={
+    NEW_PROFESSORS,
+    NEW_COURSES,
+    NEW_DEPARTMENTS,
+    NEW_STUDENTS,
     DATABASE,
     ADMIN,
     COURSE,

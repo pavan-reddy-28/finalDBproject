@@ -39,12 +39,12 @@ function AdminDashboard() {
         {
           [ 
             {title:"Add Professors",redirect:"/addProfessors"},
-            {title:"View Professors",redirect:"/viewProfessors"},
+            // {title:"View Professors",redirect:"/viewProfessors"},
             {title:"Add Deparments",redirect:"/addDepartments"},
             {title:"Add Courses",redirect:"/addSubjects"},
             // {title:"View Enrolled Students",redirect:"/viewEnrolledStudents"},
             // {title:"Assign Classes",redirect:"/registerClasses"},
-            {title:"View Courses",redirect:"/viewAdminCourses"},
+            // {title:"View Courses",redirect:"/viewAdminCourses"},
             
           ].map((obj,index) => (
             <Card key={`card-${index}`}>

@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
 
 import { CourseContainer, CourseSubContainer, Title } from '../styles/styles';
-
+import { Cookies } from 'react-cookie';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCourses } from '../../../features/courses/courseSlice';
+import { getStudentClassData } from '../../../features/newStudent/newStudentSlice';
 
 
 const ViewCourses = () => {
     const dispatch = useDispatch();
+        const cookies = new Cookies();
     const fetchCoursesData = useSelector(
         (state) => state.courses.courses
     )
+    
+const fetchStudentCourses = useSelector(
+    (state) => state.newStudent["studentCourses"]
+)
+
+useEffect(() => {
+  const studentId = cookies.get("id")
+    dispatch(getStudentClassData({studentId}))
+ 
+}, [])
+
+console.log(" new data   data :   ",fetchStudentCourses)
 
     useEffect(() => {
         dispatch(fetchCourses())

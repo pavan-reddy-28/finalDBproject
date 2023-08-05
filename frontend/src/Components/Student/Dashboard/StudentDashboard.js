@@ -48,10 +48,10 @@ function StudentDashboard() {
       <MainNav>
         {
           [ 
-            {title:"View Courses",redirect:"/studentViewCourses"},
+            
             {title:"Enroll Classes",redirect:"/studentRegisterClasses"},
-            {title:"Update / View  Enrollment",redirect:"/studentUpdateClasses"},
-            {title:"View Professors",redirect:"/viewProfessors"},
+             {title:" View  Enrollment",redirect:"/studentUpdateClasses"}
+            // {title:"View Professors",redirect:"/viewProfessors"},
             
           ].map((obj,index) => (
             <CourseCardTitle key={`card-${index}`}>

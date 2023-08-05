@@ -5,63 +5,92 @@ import { ButtonContainer, Title } from '../styles/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { RadioButtonContainer, SubmitButton, RowContainer, FormContainer, Card, ModalContent } from '../styles/departmentStyles';
 import SuccessModal from '../SuccessModal';
-import { fetchCourses, fetchCrnByDepart,fetchCrnArrayById, fetchCourseIdArray } from '../../../features/courses/courseSlice';
+import { fetchCourses, fetchCrnByDepart, fetchCrnArrayById, fetchCourseIdArray } from '../../../features/courses/courseSlice';
 import { fetchAllProfessorsMails, professorCheckMail, professorRegister } from '../../../features/professor/professorSlice';
+import { fetchNewDepartments, fetchCoursesNew, fetchClassRoomsByDepartment } from '../../../features/newCourse/newCourseSlice';
+import { fetchProfessorMailsNew, insertProfessorNew } from '../../../features/newProfessor/newProfessorSlice';
 
 
 const AddProfessors = () => {
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-    const [courseError,setCourseError] = useState("")
+    const [timingsArray, setTimingsArray] = useState([])
+    const [coursesArray, setCoursesArray] = useState([]);
+    const [courseError, setCourseError] = useState("")
     const dispatch = useDispatch();
     const [professorData, setProfessorData] = useState({
         firstName: '',
         lastName: '',
         email: '',
         department: '',
+        roomNumber: '',
         subject: '',
         crn: '',
         day: { 'MON': '', 'TUE': '', 'WED': '', 'THU': '', 'FRI': '' },
         crnValue: {},
+        available:'25'
 
     });
 
+    
     useEffect(() => {
         dispatch(fetchCourses())
     }, [])
 
-    const fetchCrnArrayValue = useSelector(
-        (state) => state.courses.crnArray
-    )
 
-    const fetchDepartmentsData = useSelector(
-        (state) => state.courses.courses
-    )
-    const fetchCrnsByDepart = useSelector(
-        (state) => state.courses.crns
+    const fetchDepartmentsDataNew = useSelector(
+        (state) => state.newCourses["departments"]
     )
     const fetchEmails = useSelector(
-        (state) => state.professor.AllProfessorMails
+        (state) => state.newProfessor["professorMails"]
     )
-    const fetchCoursesArray = useSelector(
-        (state) => state.courses.courseIdArray
+    const fetchCoursesDataNew = useSelector(
+        (state) => state.newCourses["allCourses"]
     )
+    const fetchClassRoomArray = useSelector(
+        (state) => state.newCourses["roomsByDepart"]
+    )
+
+    //get departments and courses-complete
     useEffect(() => {
-        dispatch(fetchAllProfessorsMails())
-        dispatch(fetchCourseIdArray())
-       
-        console.log(" crns professorData.department ", fetchEmails)
+        dispatch(fetchNewDepartments())
+        dispatch(fetchCoursesNew())
+        dispatch(fetchProfessorMailsNew())
     }, [])
 
-
+    //get classrooms by department
     useEffect(() => {
-        dispatch(fetchCrnByDepart({ department: professorData.department }))
-        console.log(" crns professorData.department ", fetchCrnsByDepart)
+        professorData.department && dispatch(fetchClassRoomsByDepartment({ department: professorData.department }))
     }, [professorData.department])
 
     useEffect(() => {
-        dispatch(fetchCrnArrayById({ id:professorData.crn }))
-        console.log(` crns array   ${professorData.crn} : `, fetchCrnArrayValue)
-    }, [professorData.crn])
+
+        let spamArray = [];
+        if (professorData.roomNumber) {
+
+            spamArray = fetchClassRoomArray[professorData.roomNumber].split(";")
+
+        }
+        setTimingsArray(spamArray)
+    }, [professorData.roomNumber])
+
+
+
+
+    useEffect(() => {
+        let courseArray = []
+        if (fetchCoursesDataNew != []) {
+            courseArray = fetchCoursesDataNew.flatMap(item => {
+                const departments = Object.values(item);
+                const courses = departments.flat();
+
+                return courses.filter(course => course.department == professorData.department)
+
+            });
+        }
+        setCoursesArray([...courseArray]);
+    }, [professorData.department])
+
+
 
     const [crnSelectionError, setCrnSelectionError] = useState("");
 
@@ -73,7 +102,7 @@ const AddProfessors = () => {
         setCourseError("")
         setFormErrors({});
         const { name, value } = e.target;
-        if(name == "department"){
+        if (name == "department") {
             setProfessorData({
                 ...professorData,
                 [name]: value,
@@ -83,7 +112,7 @@ const AddProfessors = () => {
                 crnValue: {}
             })
         }
-       else if (name == "day") {
+        else if (name == "day") {
             let x = { ...professorData.day }
 
             if (x[value] === "") {
@@ -99,7 +128,11 @@ const AddProfessors = () => {
             if (!x[value]) {
                 x = { ...professorData.crnValue, [value]: value }
                 if (Object.keys(x).length > 4) { setCrnSelectionError(true) }
-                else { setCrnSelectionError(false); setProfessorData({ ...professorData, ['crnValue']: { ...x } }); }
+                else { 
+                    setCrnSelectionError(false); 
+                    setProfessorData({ ...professorData, ['crnValue']: { ...x } }); 
+                
+                }
 
             } else {
                 setCrnSelectionError(false);
@@ -125,6 +158,7 @@ const AddProfessors = () => {
         if (!professorData.firstName.trim()) {
             errors.firstName = true;
         }
+        
         if (!professorData.lastName.trim()) {
             errors.lastName = true;
         }
@@ -140,6 +174,12 @@ const AddProfessors = () => {
         if (!professorData.crn) {
             errors.crn = true;
         }
+        if (!professorData.roomNumber) {
+            errors.roomNumber = true;
+        }
+        if (!professorData.available) {
+            errors.available = true;
+        }
         if (!professorData.day) {
             errors.day = true;
         }
@@ -148,49 +188,45 @@ const AddProfessors = () => {
         } else {
             // Submit the form or perform any desired actions on successful form submission
 
+               
+            
+                    
+                    let crnStringValue = ""
+                    Object.keys(professorData.crnValue).map((obj)=>{
+                        crnStringValue=crnStringValue+obj+";"
+                    })
 
-            // dispatch(professorCheckMail({email:professorData.email}))
-
-            if( !fetchEmails.includes(professorData.email) ){
-
-
-                if( fetchCoursesArray.includes(professorData.subject)){
-                    setCourseError("yes")
-                    setIsErrorModalOpen(true);
-                }else{
-                const professorCollectionData = {
-                    firstName: professorData.firstName,
-                    lastName: professorData.lastName,
-                    mail: professorData.email,
-                    courseId: professorData.subject
-                }
-                
-                let enrolls = [];
-                Object.keys(professorData.crnValue).forEach((obj) => {
-                    let arr = obj.split("_");
-                    enrolls.push(
-                        {
-                        day: arr[0],
-                        time: arr[1],
-                        available: 25,
-                        }
-                    )
-                })
-                const professorEnrollmentData = {
-                    crn:professorData.crn,
-                    enrolls
-                }
-                const sections = { [professorData.crn] : Object.keys(professorData.crnValue) }
-              
-    
-                console.log(" sections data ",sections)
-                 dispatch(professorRegister({professorEnrollmentData,professorCollectionData,sections}))
-                setIsModalOpen(true);
-            }
-            }else{
-                setIsErrorModalOpen(true);
-            }
+                    if (crnStringValue.endsWith(";")) {
+                        crnStringValue = crnStringValue.slice(0, -1);
                     }
+                
+                    const collectionData = {
+                      
+                        firstName:professorData.firstName,
+                        lastName:professorData.lastName,
+                        mail:professorData.email,
+                        department:professorData.department,
+                        enrolls:[
+                            {
+                                "timings":crnStringValue,
+                                "roomNumber":professorData.roomNumber,
+                                crn:professorData.crn,
+                                courseId:professorData.subject,
+                                available:professorData.available
+                            }
+                        ]
+
+                    }
+                    if(fetchEmails.includes(professorData.email)){
+                        dispatch(insertProfessorNew({...collectionData,  isUpdate:true,}));
+                    }else{
+                        dispatch(insertProfessorNew({...collectionData,  isUpdate:false,}));
+                    }
+                    
+                    setIsModalOpen(true)
+                
+            
+        }
     };
 
     return (
@@ -238,8 +274,13 @@ const AddProfessors = () => {
                                     onChange={handleInputChange}
                                     label="Department"
                                 >
-                                    {
+                                    {/* {
                                         Object.keys(fetchDepartmentsData).map((dept, index) => (<MenuItem key={index} value={dept}>{dept}</MenuItem>))
+                                    } */}
+                                    {
+                                        fetchDepartmentsDataNew.map((deptName, index) => (
+                                            <MenuItem key={index} value={deptName}>{deptName}</MenuItem>
+                                        ))
                                     }
                                 </Select>
                             </FormControl>
@@ -253,37 +294,51 @@ const AddProfessors = () => {
                                 >
                                     {
                                         professorData.department ?
-                                            fetchDepartmentsData[professorData.department]["courses"].map(
-                                                (objX) => (
-                                                    <MenuItem key={objX._id} value={objX._id}>{objX.title}</MenuItem>
+                                            coursesArray.map(
+                                                (course, index) => (
+                                                    <MenuItem key={index} value={course._id}>{course["name"]}</MenuItem>
                                                 )
                                             )
                                             : <MenuItem value={""}>{"None"}</MenuItem>
                                     }
+
                                 </Select>
                             </FormControl>
                         </RowContainer>
                         {
-                            professorData.subject &&  fetchCrnsByDepart ? <FormControl variant="outlined" fullWidth error={formErrors.crn}>
+                            professorData.subject && <FormControl variant="outlined" fullWidth error={formErrors.crn}>
                                 <InputLabel>CRN</InputLabel>
                                 <Select name="crn" value={professorData.crn} onChange={handleInputChange} label="CRN">
                                     {
-                                        fetchCrnsByDepart.map((crnObj, index) => (
-                                            <MenuItem key={index} value={crnObj}>{crnObj}</MenuItem>
+                                        coursesArray.map(
+                                            (course, index) => (
+                                                course["_id"] == professorData.subject ?
+                                                    course["crnArray"].map((crnObj, crnIndex) => (
+                                                        crnObj["pid"] == null ? <MenuItem key={crnIndex + "-crn"} value={crnObj["crn"]}>{crnObj["crn"]}</MenuItem> : <MenuItem value={""}>{"None"}</MenuItem>
+                                                    )) : <></>
+
+                                            )
+                                        )
+                                    }
+                                </Select>
+                            </FormControl>
+
+                        }
+                        {
+                            professorData.crn && <FormControl variant="outlined" fullWidth error={formErrors.roomNumber}>
+                                <InputLabel>Room Number</InputLabel>
+                                <Select name="roomNumber" value={professorData.roomNumber} onChange={handleInputChange} label="roomNumber">
+                                    {
+                                        fetchClassRoomArray && Object.keys(fetchClassRoomArray).map((obj, index) => (
+                                            <MenuItem key={index + "-classRoom"} value={obj}>{obj}</MenuItem>
                                         ))
                                     }
-
-                                    {/* Add more CRN options as needed */}
                                 </Select>
-                            </FormControl>:
-                            <>
-                            { professorData.subject!=="" && <span style={{ fontSize: '12px', color: 'red', borderBottom: '1px solid red' }}>No CRN allocated for this course </span>}
-                                
-                            </>
+                            </FormControl>
+
                         }
 
-
-                        {professorData.crn && (
+                        {professorData.roomNumber && (
                             <>
                                 <span>Select Class Timings</span>
                                 {crnSelectionError && <span style={{ fontSize: '12px', color: 'red', borderBottom: '1px solid red' }}>olny 4 classes can be slectecd</span>}
@@ -312,28 +367,29 @@ const AddProfessors = () => {
                                                         <RowContainer style={{ marginLeft: '20px' }} key={"r2-" + index} >
                                                             <RadioButtonContainer style={{ flexDirection: 'row' }} key={"r2-" + index} >{
                                                                 [{ value: '1000', label: '10:00 AM' }, { value: '0110', label: '01:10 PM' }, { value: '0320', label: '03:20 PM' }].map((classTime, index1) => {
-                                                                    
-                                                                    return(
-                                                                        fetchCrnArrayValue.includes(`${obj.value}_${classTime.value}`)? <FormControlLabel
-                                                                        value={`${obj.value}_${classTime.value}`}
-                                                                        control={<Radio />}
-                                                                        label={classTime.label}
-                                                                        name="time"
-                                                                        checked={professorData.crnValue[`${obj.value}_${classTime.value}`] === `${obj.value}_${classTime.value}`}
-                                                                        // onClick={handleInputChange}
-                                                                        disabled
-                                                                        key={index1}
-                                                                    />:
-                                                                    <FormControlLabel
-                                                                        value={`${obj.value}_${classTime.value}`}
-                                                                        control={<Radio />}
-                                                                        label={classTime.label}
-                                                                        name="time"
-                                                                        checked={professorData.crnValue[`${obj.value}_${classTime.value}`] === `${obj.value}_${classTime.value}`}
-                                                                        onClick={handleInputChange}
-                                                                        key={index1}
-                                                                    />
-                                                                )}
+
+                                                                    return (
+                                                                        timingsArray.includes(`${obj.value}_${classTime.value}`) ? <FormControlLabel
+                                                                            value={`${obj.value}_${classTime.value}`}
+                                                                            control={<Radio />}
+                                                                            label={classTime.label}
+                                                                            name="time"
+                                                                            checked={professorData.crnValue[`${obj.value}_${classTime.value}`] === `${obj.value}_${classTime.value}`}
+                                                                            // onClick={handleInputChange}
+                                                                            disabled
+                                                                            key={index1}
+                                                                        /> :
+                                                                            <FormControlLabel
+                                                                                value={`${obj.value}_${classTime.value}`}
+                                                                                control={<Radio />}
+                                                                                label={classTime.label}
+                                                                                name="time"
+                                                                                checked={professorData.crnValue[`${obj.value}_${classTime.value}`] === `${obj.value}_${classTime.value}`}
+                                                                                onClick={handleInputChange}
+                                                                                key={index1}
+                                                                            />
+                                                                    )
+                                                                }
                                                                 )
                                                             }
                                                             </RadioButtonContainer>
@@ -346,6 +402,15 @@ const AddProfessors = () => {
                                     }
                                 </RadioButtonContainer>
                             </>)}
+                            <TextField
+                            label="Number of Slots"
+                            variant="outlined"
+                            fullWidth
+                            name="available"
+                            value={professorData.available}
+                            onChange={handleInputChange}
+                            error={formErrors.available}
+                        />
                         <ButtonContainer>
                             <SubmitButton type="submit" variant="contained" color="primary">
                                 Submit
@@ -360,18 +425,18 @@ const AddProfessors = () => {
                 redirect={"/adminDashboard"}
             />
             <Modal open={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)}>
-                                    <div>
-            <ModalContent>
-             <span >Professor  : <b style={{color:'red'}}>{professorData.email} </b> already exits </span>
-             </ModalContent>
-             {
-                courseError =="yes"?<>
-                <ModalContent>
-             <span >Selected  : <b style={{color:'red'}}>{"Course"} </b> is registered to another Professor</span>
-             </ModalContent></>:<></>
-             }
-             </div>
-     </Modal>
+                <div>
+                    <ModalContent>
+                        <span >Professor  : <b style={{ color: 'red' }}>{professorData.email} </b> already exits </span>
+                    </ModalContent>
+                    {
+                        courseError == "yes" ? <>
+                            <ModalContent>
+                                <span >Selected  : <b style={{ color: 'red' }}>{"Course"} </b> is registered to another Professor</span>
+                            </ModalContent></> : <></>
+                    }
+                </div>
+            </Modal>
 
         </div>
     );

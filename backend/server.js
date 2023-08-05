@@ -6,6 +6,9 @@ const { signInAdmin,getAdminDetailsById } = require('./controllers/admin');
 const { signInStudent,dropCourse, registerStudent,getStudentDetailsById,registerStudentClass, getStudentClassDetails, getAllStudentMails } = require('./controllers/student');
 const { addDepartments, getAllDepartments,getCourseIdArray,getDepartments,addCourse,getCRN,getCrnByDepart, getCrnById } = require('./controllers/course');
 const { addProfessor,getProfessors,getProfessorsArray,checkEmailExists , getProfEnrollmentById} = require('./controllers/professor');
+const {  fetchClassRoomsByDepart: fetchClassRoomsByDepartNew ,  fetchDepartments: fetchDepartmentsNew, insertDepartment:insertDepartmentNew, fetchClassRooms:fetchClassRoomsNew, insertCourse:insertCourseNew,fetchCourses:fetchCoursesNew } = require('./DAO/entities/Courses/courses');
+const { insertProfessor:insertProfessorNew, fetchProfessosMails:fetchProfessosMailsNew } = require('./DAO/entities/Professor/professor');
+const { studentDropCourse:studentDropCourseNew,insertStudent:insertStudentNew,getStudentClassData, fetchStudentMails:fetchStudentMailsNew,registerStudentClass:registerStudentClassNew } = require('./DAO/entities/Student/student');
 
 
 const app = express();
@@ -158,6 +161,88 @@ app.get("/fetchCourseIdArray",upload.any(), async (req,res) => {
     res.json({...data});
 })
 
+
+
+//departments 
+app.get("/fetchDepartmentsNew",upload.any(), async (req,res) => {
+    const data = await fetchDepartmentsNew();
+    res.json({...data});
+})
+
+app.post("/insertDepartmentsNew",upload.any(), async (req,res) => {
+    
+    const  {  department,classRooms} = req.body;
+    const data = await insertDepartmentNew({  department,classRooms });
+    res.json({...data});
+})
+
+
+app.get("/fetchClassroomsNew",upload.any(), async (req,res) => {
+    const data = await fetchClassRoomsNew();
+    res.json({...data});
+})
+
+app.post("/fetchClassRoomsByDepartment",upload.any(), async (req,res) => {
+    const { department } = req.body
+    const data = await fetchClassRoomsByDepartNew({department});
+    res.json({...data});
+})
+
+app.post("/insertCourseNew",upload.any(), async (req,res) => {
+    
+    const  {  name,cid,description,department,crnArray} = req.body;
+    const data = await insertCourseNew({  name,cid,description,department,crnArray });
+    res.json({...data});
+})
+
+app.get("/fetchCoursesNew",upload.any(), async (req,res) => {
+    const data = await fetchCoursesNew();
+    res.json({...data});
+})
+
+app.post("/insertProfessorNew",upload.any(), async (req,res) => {
+    const  {  firstName,lastName,mail,enrolls,department,isUpdate} = req.body;
+    const data = await insertProfessorNew({ firstName,lastName,mail,enrolls,department,isUpdate});
+    res.json({...data});
+})
+
+app.get("/fetchProfessorMails",upload.any(), async (req,res) => {
+    const data = await fetchProfessosMailsNew();
+    res.json({...data});
+})
+
+app.post("/insertStudentNew",upload.any(), async (req,res) => {
+    const  {  firstName,lastName,mail,password,address,phone,studentDataId} = req.body;
+    const data = await  insertStudentNew({ firstName,lastName,mail,password,address,studentDataId,phone});
+    res.json({...data});
+})
+
+app.get("/fetchStudentMails",upload.any(), async (req,res) => {
+    const data = await fetchStudentMailsNew();
+    res.json({...data});
+})
+
+app.post("/registerStudentClassNew",upload.any(), async (req,res) => {
+    const  { studentId,setRequestData } = req.body;
+
+    const data = await registerStudentClassNew({studentId,setRequestData })
+    res.json({...data});
+})
+app.post("/getStudentClassData",upload.any(), async (req,res) => {
+
+    const  { studentId} = req.body;
+    console.log("student id ",studentId)
+    const data = await getStudentClassData({studentId })
+    res.json({...data});
+})
+
+app.post("/studentDropCourseNew",upload.any(), async (req,res) => {
+
+    const  { professorId,studentId} = req.body;
+    console.log("student id ",professorId,studentId)
+    const data = await studentDropCourseNew({professorId,studentId })
+    res.json({...data});
+})
 
 app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);

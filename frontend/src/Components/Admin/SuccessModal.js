@@ -9,7 +9,10 @@ function SuccessModal({isModalOpen,setIsModalOpen,redirect}) {
     const navigate = useNavigate();
     const handler = (redirect) =>{
         setIsModalOpen(false)
-        navigate(redirect)
+        
+         navigate(redirect)
+         
+         
 
     }
   return (

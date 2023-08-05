@@ -1,14 +1,13 @@
 
 // const { alterDataArray } = require('../controllers/util');
-const { DATABASE, ADMIN, STUDENT, COURSE, DEPARTMENT, SECTION, PROFESSOR, PROFESSOR_ENROLLMENT, STUDENT_ENROLLMENT } = require('./constants');
+const { DATABASE, ADMIN, STUDENT, COURSE, DEPARTMENT, SECTION, PROFESSOR, PROFESSOR_ENROLLMENT, STUDENT_ENROLLMENT, NEW_STUDENTS } = require('./constants');
 
 
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
 const nodemailer = require('nodemailer');
 
-const uri = "mongodb+srv://sxp17390:root123@cluster0.6bf1a1k.mongodb.net/mongodb?retryWrites=true&w=majority";
-
+const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
 
 const database = client.db(DATABASE);
@@ -21,16 +20,12 @@ const professorCollection = database.collection(PROFESSOR)
 const professorEnrollmentCollection = database.collection(PROFESSOR_ENROLLMENT)
 const studentEnrollmentCollection = database.collection(STUDENT_ENROLLMENT)
 
-const transporter = nodemailer.createTransport({
-  port: 587,
-  name:'x-app',
-  host: "smtp.gmail.com",
-  auth: {
-      user: 'saipavan.vgf223@gmail.com',
-      pass: 'bfmjygwmwdzmpdug',
-  },
-  // upgrades later with STARTTLS -- change this based on the PORT
-});
+const studentNewCollection = database.collection(NEW_STUDENTS)
+
+
+
+
+
 async function dbAdminLogin(adminData) {
 
   try {
@@ -57,7 +52,7 @@ async function dbGetStudentDetailsById(id) {
 
   try {
     const query = { _id: new ObjectId(id) };
-    const data = await studentCollection.findOne(query);
+    const data = await studentNewCollection.findOne(query);
     return { ...data, "error": "" };
   } catch (error) {
     return "error"
@@ -69,7 +64,7 @@ async function dbGetStudentDetailsById(id) {
 async function dbStudentLogin(studentData) {
   try {
     const query = { ...studentData };
-    const data = await studentCollection.findOne(query);
+    const data = await studentNewCollection.findOne(query);
     return { ...data, "error": "" };
   } catch (error) {
     return "error"
@@ -84,19 +79,6 @@ async function dbStudentRegistration(studentData) {
 
   try {
     const query = { firstName, lastName, mail, password,"role":"student" };
-
-    const mailData = {
-      from: 'saipavan.vgf223@gmail.com',
-      to: mail,
-      subject: "New user details ",
-      html: `<b>Hey there! </b><br> This is mail id :${mail} and password : ${password} <br/>`,
-  };
-    transporter.sendMail(mailData, (error, info) => {
-      if (error) {
-          return console.log(error);
-      }
-      
-  });
 
 
 
@@ -609,6 +591,7 @@ module.exports = {
   dbGetAllDepartments,
   dbGetProfessorsArray,
   dbGetCourseIdArray,
-  dbGetAllStudentMails
+  dbGetAllStudentMails,
+  database,
 }
 

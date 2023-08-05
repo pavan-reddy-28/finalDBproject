@@ -8,26 +8,58 @@ import { addCourses, fetchCourses } from '../../../features/courses/courseSlice'
 import { fetchProfessorCourseDetails } from '../../../features/professor/professorSlice';
 import { Cookies } from 'react-cookie';
 import { studentClassDetails, studentClassRegister } from '../../../features/student/studentSlice';
+import { fetchCoursesNew, fetchNewDepartments } from '../../../features/newCourse/newCourseSlice';
+import { studentClassRegisterNew } from '../../../features/newStudent/newStudentSlice';
 
 const EnrollCourses = () => {
     const dispatch = useDispatch();
     const cookies = new Cookies();
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
     const [studentDuplicates, setStudentDuplicates] = useState([])
-    
+
     const [dayArray, setDayArray] = useState([]);
     const [timeArray, setTimeArray] = useState({ "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [] });
     const [courseData, setcourseData] = useState({
         department: '',
         courseName: '',
-        courseDescription: '',
+
         day: "",
         time: "",
+        pSelect: "",
         crnValue: {},
     });
 
     const [formErrors, setFormErrors] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [coursesArray, setCoursesArray] = useState([]);
+
+    const fetchDepartmentsDataNew = useSelector(
+        (state) => state.newCourses["departments"]
+    )
+    const fetchCoursesDataNew = useSelector(
+        (state) => state.newCourses["allCourses"]
+    )
+
+
+    useEffect(() => {
+        dispatch(fetchNewDepartments())
+        dispatch(fetchCoursesNew())
+    }, [])
+
+    useEffect(() => {
+        let courseArray = []
+        if (fetchCoursesDataNew != []) {
+            courseArray = fetchCoursesDataNew.flatMap(item => {
+                const departments = Object.values(item);
+                const courses = departments.flat();
+
+                return courses.filter(course => course.department == courseData.department)
+
+            });
+        }
+        setCoursesArray([...courseArray]);
+    }, [courseData.department])
+
 
     const fetchDepartmentsData = useSelector(
         (state) => state.courses.courses
@@ -61,51 +93,7 @@ const EnrollCourses = () => {
 
 
     }, [courseData.courseName])
-    useEffect(() => {
 
-        if (professorCourseDetails["enrolls"] && professorCourseDetails["enrolls"].length > 0) {
-            let arrayObj = [];
-            let timeArrayObj = { "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [] };
-            professorCourseDetails["enrolls"].forEach((obj) => {
-                switch (obj["day"]) {
-                    case "MON":
-                        arrayObj.push({ value: 'MON', label: 'Monday' })
-                        break;
-                    case "TUE":
-                        arrayObj.push({ value: 'TUE', label: 'tuesday' })
-                        break;
-                    case "WED":
-                        arrayObj.push({ value: 'WED', label: 'Wednesday' })
-                        break;
-                    case "THU":
-                        arrayObj.push({ value: 'THU', label: 'Thursday' })
-                        break;
-                    case "FRI":
-                        arrayObj.push({ value: 'FRI', label: 'Friday' })
-                        break;
-                }
-                let label = convertTime(obj["time"])
-                timeArrayObj[obj["day"]].push({ value: obj["time"], label: label, available: obj["available"] });
-            })
-
-
-            arrayObj = arrayObj.filter((obj, index) => {
-                // Return true for the first occurrence of each object
-                return index === arrayObj.findIndex(item => item.value === obj.value && item.label === obj.label);
-            });
-            console.log("timeArrayObj ", timeArrayObj)
-            setDayArray(arrayObj);
-            setTimeArray(timeArrayObj);
-
-        } else {
-            setDayArray([]);
-        }
-
-
-
-
-
-    }, [professorCourseDetails])
 
     const convertTime = (value) => {
         switch (value) {
@@ -123,19 +111,16 @@ const EnrollCourses = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "courseName") {
-            let dataObject = fetchDepartmentsData[courseData.department]["courses"]
+            setDayArray([]);
+            setTimeArray({ "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [] });
 
-            let courseDescriptionValue = ""
-            for (let i = 0; i < dataObject.length; i++)
-                if (dataObject[i]._id == value)
-                    courseDescriptionValue = dataObject[i].description
-
-            setcourseData({ ...courseData, "courseDescription": courseDescriptionValue, [name]: value });
+            setcourseData({ ...courseData, pSelect: "", [name]: value });
         } else if (name === "department") {
-
+            setDayArray([]);
+            setTimeArray({ "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [] });
             setcourseData({
                 courseName: '',
-                courseDescription: '',
+                pSelect: "",
                 day: "",
                 crnValue: {}, [name]: value
             });
@@ -144,7 +129,63 @@ const EnrollCourses = () => {
             setcourseData({ ...courseData, ['time']: value });
         } else if (name === "day") {
             setcourseData({ ...courseData, ['day']: value });
-        } else {
+        } else if (name == "pSelect") {
+
+            setcourseData({ ...courseData, [name]: value });
+            let timeArrayObj = { "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [] };
+            let arrayObj = [];
+            coursesArray.map(
+                (course, index) => {
+            
+                    if (course["_id"] == courseData.courseName) {
+
+                        course["crnArray"].map((obj) => {
+
+                            if (obj["pid"] !== null && obj["pid"] == courseData.pSelect) {
+                                let timeDataArray = obj["timings"].split(";")
+
+                                timeDataArray.map((timeObj) => {
+                                    let realData = timeObj.split("_")
+
+                                    timeArrayObj[realData[0]].push({ value: realData[1], label: convertTime(realData[1]) })
+                                    switch (realData[0]) {
+                                        case "MON":
+                                            arrayObj.push({ value: 'MON', label: 'Monday' })
+
+                                            break;
+                                        case "TUE":
+                                            arrayObj.push({ value: 'TUE', label: 'tuesday' })
+                                            break;
+                                        case "WED":
+                                            arrayObj.push({ value: 'WED', label: 'Wednesday' })
+                                            break;
+                                        case "THU":
+                                            arrayObj.push({ value: 'THU', label: 'Thursday' })
+                                            break;
+                                        case "FRI":
+                                            arrayObj.push({ value: 'FRI', label: 'Friday' })
+                                            break;
+                                    }
+                                })
+                            }
+                        })
+                    }
+                }
+            )
+
+            const uniqueValues = new Set(); // To store unique values
+            const uniqueArr = arrayObj.filter(item => {
+                if (!uniqueValues.has(item.value)) {
+                    uniqueValues.add(item.value);
+                    return true;
+                }
+                return false;
+            });
+            setDayArray(uniqueArr);
+            setTimeArray(timeArrayObj);
+        }
+
+        else {
             setcourseData({ ...courseData, [name]: value });
         }
     };
@@ -160,9 +201,7 @@ const EnrollCourses = () => {
         if (!courseData.courseName.trim()) {
             errors.courseName = true;
         }
-        if (!courseData.courseDescription.trim()) {
-            errors.courseDescription = true;
-        }
+
         if (!courseData.day.trim()) {
             errors.day = true;
         }
@@ -174,49 +213,86 @@ const EnrollCourses = () => {
             setFormErrors(errors);
         } else {
 
-
-
-            let duplicateArray = []
-           
-            if(studentCourseRegistrationDetails  && studentCourseRegistrationDetails.enrolls){
-                for(let i =0;i<studentCourseRegistrationDetails.enrolls.length;i++){
-                    if (studentCourseRegistrationDetails.enrolls[i]["courseId"] === courseData.courseName) {
-                        duplicateArray.push(`DC`)
+            let setRequestData = {}
+            
+            coursesArray.map(
+                (course, index) => {
+                    if(course["_id"] == courseData.courseName){
+                        course["crnArray"].map((crnData)=>{
+                            if( crnData["pid"] == courseData.pSelect){
+                                setRequestData = {
+                                    professorName: crnData["pName"],
+                                    roomNumber: crnData["roomNumber"],
+                                    professorId: crnData["pid"],
+                                    department:courseData.department,
+                                    courseName: course["name"],
+                                    cid: course["cid"],
+                                    crn:course["crn"]
+                                }
+                            }
+                        })
                     }
-                    if (studentCourseRegistrationDetails.enrolls[i]["day"] === courseData.day && studentCourseRegistrationDetails.enrolls[i]["time"] === courseData.time) {
-                        duplicateArray.push(`TC`)
-                    }
-                }
-            }
+        })
+    
+        setRequestData= {
+            ...setRequestData,
+            day: courseData.day,
+            time:courseData.time,
+            
+        }
+
+        
+    
+
+        const studentId = cookies.get("id")
+
+        dispatch(  studentClassRegisterNew({studentId,setRequestData}))
 
 
 
-            if (duplicateArray.length > 0) {
-                
-                setStudentDuplicates(duplicateArray)
-                setIsErrorModalOpen(true)
-            }
-            else {
-                const studentId = cookies.get("id")
-                const enrollData = {
-                    courseId: courseData.courseName,
-                    professorId: professorCourseDetails.professorId,
-                    day: courseData.day,
-                    time: courseData.time,
-                    crn: professorCourseDetails.crn
-                }
-                console.log("enroll data ", {
-                    studentId,
-                    enrollData
-                })
+        setIsModalOpen(true)
 
-               // Submit the form or perform any desired actions on successful form submission
-                dispatch(studentClassRegister({
-                    studentId,
-                    enrollData
-                }))
-                setIsModalOpen(true);
-            }
+
+
+            // let duplicateArray = []
+
+            // if (studentCourseRegistrationDetails && studentCourseRegistrationDetails.enrolls) {
+            //     for (let i = 0; i < studentCourseRegistrationDetails.enrolls.length; i++) {
+            //         if (studentCourseRegistrationDetails.enrolls[i]["courseId"] === courseData.courseName) {
+            //             duplicateArray.push(`DC`)
+            //         }
+            //         if (studentCourseRegistrationDetails.enrolls[i]["day"] === courseData.day && studentCourseRegistrationDetails.enrolls[i]["time"] === courseData.time) {
+            //             duplicateArray.push(`TC`)
+            //         }
+            //     }
+            // }
+
+            // if (duplicateArray.length > 0) {
+
+            //     setStudentDuplicates(duplicateArray)
+            //     setIsErrorModalOpen(true)
+            // }
+            // else {
+            //     const studentId = cookies.get("id")
+            //     const enrollData = {
+            //         courseId: courseData.courseName,
+            //         professorId: professorCourseDetails.professorId,
+            //         day: courseData.day,
+            //         time: courseData.time,
+            //         crn: professorCourseDetails.crn
+            //     }
+            //     console.log("enroll data ", {
+            //         studentId,
+            //         enrollData
+            //     })
+
+            //     // Submit the form or perform any desired actions on successful form submission
+            //     dispatch(studentClassRegister({
+            //         studentId,
+            //         enrollData
+            //     }))
+            //     setIsModalOpen(true);
+            // }
             // 
         }
     };
@@ -238,9 +314,10 @@ const EnrollCourses = () => {
                                 label="Department"
                             >
                                 {
-                                    Object.keys(fetchDepartmentsData).map((dept, index) => (<MenuItem key={index} value={dept}>{dept}</MenuItem>))
+                                    fetchDepartmentsDataNew.map((deptName, index) => (
+                                        <MenuItem key={index} value={deptName}>{deptName}</MenuItem>
+                                    ))
                                 }
-                                {/* Add more courses as needed */}
                             </Select>
                         </FormControl>
                         {
@@ -254,31 +331,63 @@ const EnrollCourses = () => {
                                     label="courseName"
                                 >
                                     {
-                                        fetchDepartmentsData[courseData.department]["courses"].map((obj, index) => (<MenuItem key={index} value={obj._id}>{obj.title}</MenuItem>))
+                                        courseData.department ?
+                                            coursesArray.map(
+                                                (course, index) => (
+                                                    <MenuItem key={index} value={course._id}>{course["name"]}</MenuItem>
+                                                )
+                                            )
+                                            : <MenuItem value={""}>{"None"}</MenuItem>
                                     }
 
                                 </Select>
                             </FormControl>
                         }
-
                         {courseData.courseName && <>
-                            <div>
-                                <span><u>Description : </u></span>
-                                <br />
-                                <span style={{ marginTop: '5px' }}>{courseData.courseDescription}</span>
-                            </div>
+                            {
+                                coursesArray.map(
+                                    (course, index) => (
+                                        course["_id"] == courseData.courseName ? <>
+                                            <RadioButtonContainer style={{
+                                                paddingLeft: '10px',
+                                                border: formErrors.time ? '1px solid red' : ''
+                                            }}>
+                                                {
+                                                    course["crnArray"].map((obj) => (obj["pid"] != null ? <div>
+                                                        <FormControlLabel
+                                                            value={obj["pid"]}
+                                                            control={<Radio />}
+                                                            label={<div>
 
-                            <div>
-                                <div>
-                                    <span>Professor Name</span> : <span>{professorCourseDetails.professorName}</span>
-                                </div>
-                                <div>
-                                    <span>Professor Email</span> : <span>{professorCourseDetails.professorMail}</span>
-                                </div>
-                                <div>
-                                    <span>CRN </span> : <span>{professorCourseDetails.crn}</span>
-                                </div>
-                            </div>
+
+                                                                <div>
+                                                                    <div>
+                                                                        <span>Professor Name</span> : <span><b>{obj["pName"]}</b></span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span>Room Number    </span> : <span><b>{obj["roomNumber"]}</b></span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span>CRN </span> : <span><b>{obj["crn"]}</b></span>
+                                                                    </div>
+                                                                </div></div>}
+                                                            name="pSelect"
+                                                            checked={obj["pid"] == null ? false : courseData.pSelect == obj["pid"]}
+                                                            onClick={handleInputChange}
+                                                            key={index}
+
+                                                        />
+                                                    </div> : <></>))
+
+                                                }
+                                            </RadioButtonContainer>
+                                        </>
+
+                                            : <></>
+                                    )
+                                )
+                            }
+
                             <>
                                 <span>Select Class Timings</span>
                                 {/* {crnSelectionError && <span style={{ fontSize: '12px', color: 'red', borderBottom: '1px solid red' }}>olny 4 classes can be slectecd</span>} */}
@@ -311,7 +420,7 @@ const EnrollCourses = () => {
                                                                         return (<FormControlLabel
                                                                             value={classTime.value}
                                                                             control={<Radio />}
-                                                                            label={`${classTime.label} [ available slots : ${classTime.available}]`}
+                                                                            label={`${classTime.label} `}
                                                                             name="time"
                                                                             checked={classTime.value === courseData.time}
                                                                             onClick={handleInputChange}
@@ -349,29 +458,32 @@ const EnrollCourses = () => {
             />
 
             <Modal open={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)}>
-                <ModalContent style={{display:'flex',flexDirection:'column'}}>
-                {
-                    studentDuplicates.map((obj)=>(
-                      obj == "TC"  ?
-                        <span>  <b style={{ color: 'red' }}>{"Time Conflict :"} </b> Change the course Timing  </span>
-                       :
-                       obj == "DC"?
-                     
-                       
-                                    <span>  <b style={{ color: 'red' }}>{"Duplicate Course :"} </b> You have already registered for this course</span>
-                                
-                       :
-                       <></>
-                    )
+                <ModalContent style={{ display: 'flex', flexDirection: 'column' }}>
+                    {
+                        studentDuplicates.map((obj) => (
+                            obj == "TC" ?
+                                <span>  <b style={{ color: 'red' }}>{"Time Conflict :"} </b> Change the course Timing  </span>
+                                :
+                                obj == "DC" ?
 
-                    )
-                }
-                
+
+                                    <span>  <b style={{ color: 'red' }}>{"Duplicate Course :"} </b> You have already registered for this course</span>
+
+                                    :
+                                    <></>
+                        )
+
+                        )
+                    }
+
                 </ModalContent>
-                
+
             </Modal>
         </div>
     );
 };
 
 export default EnrollCourses;
+
+
+

@@ -7,6 +7,9 @@ import userReducer from '../features/users/userSlice'
 import courseReducer from '../features/courses/courseSlice'
 import professorReducer from '../features/professor/professorSlice'
 import studentReducer from '../features/student/studentSlice'
+import newCourseSlice from '../features/newCourse/newCourseSlice'
+import newProfessorSlice from '../features/newProfessor/newProfessorSlice'
+import newStudentSlice from '../features/newStudent/newStudentSlice'
 const logger = createLogger()
 const store = configureStore(
     {
@@ -15,6 +18,9 @@ const store = configureStore(
             courses:courseReducer,
             professor:professorReducer,
             student:studentReducer,
+            newCourses:newCourseSlice,
+            newProfessor:newProfessorSlice,
+            newStudent:newStudentSlice
         },
         middleware: getDefaultMiddleware => getDefaultMiddleware().concat(logger)
       }
